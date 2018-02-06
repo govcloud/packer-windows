@@ -1,0 +1,64 @@
+{
+	"_comment": "Build with `packer build windows.json`",
+	"builders": [{
+		"type": "azure-arm",
+		"client_id": "{{user `client_id`}}",
+		"client_secret": "{{user `client_secret`}}",
+		"subscription_id": "{{user `subscription_id`}}",
+		"object_id": "{{user `object_id`}}",
+		"build_resource_group_name": "{{user `managed_image_resource_group_name`}}",
+		"managed_image_name": "{{user `managed_image_name`}}",
+		"managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}",
+		"managed_image_storage_account_type": "{{user `managed_image_storage_account_type`}}",
+		"image_publisher": "{{user `image_publisher`}}",
+		"image_offer": "{{user `image_offer`}}",
+		"image_sku": "{{user `image_sku`}}",
+		"image_version": "{{user `image_version`}}",
+		"communicator": "winrm",
+		"winrm_use_ssl": "true",
+		"winrm_insecure": "true",
+		"winrm_timeout": "15m",
+		"winrm_username": "packer",
+		"azure_tags": {
+			"billTo": "{{user `azure_billto`}}"
+		},
+		"ssh_username": "packer",
+		"cloud_environment_name": "{{user `cloud_environment_name`}}",
+		"os_disk_size_gb": "{{user `os_disk_size_gb`}}",
+		"os_type": "{{user `os_type`}}",
+		"vm_size": "{{user `vm_size`}}"
+	}],
+	"post-processors": [],
+	"provisioners": [{
+		"type": "powershell",
+		"scripts": [
+			"./scripts/chocolatey.ps1"
+		]
+	}],
+	"variables": {
+		"client_id": "{{env `ARM_CLIENT_ID`}}",
+		"client_secret": "{{env `ARM_CLIENT_SECRET`}}",
+		"subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+		"object_id": "{{env `ARM_OBJECT_ID`}}",
+		"managed_image_name": "{{env `ARM_MANAGED_IMAGE_NAME`}}",
+		"managed_image_resource_group_name": "{{env `ARM_MANAGED_IMAGE_RESOURCE_GROUP`}}",
+		"managed_image_storage_account_type": "Standard_LRS",
+		"image_publisher": "MicrosoftWindowsDesktop",
+		"image_offer": "Windows-10",
+		"image_sku": "RS3-Pro",
+		"image_version": "16299.192.0",
+		"azure_billto": "0002",
+		"cloud_environment_name": "Public",
+		"custom_data_file": "",
+		"os_disk_size_gb": "4095",
+		"os_type": "Windows",
+		"vm_size": "Standard_DS3_v2",
+		"ftp_proxy": "{{env `ftp_proxy`}}",
+		"http_proxy": "{{env `http_proxy`}}",
+		"https_proxy": "{{env `https_proxy`}}",
+		"no_proxy": "{{env `no_proxy`}}",
+		"rsync_proxy": "{{env `rsync_proxy`}}",
+		"vagrantfile_template": "",
+		"version": "0.0.1"
+	}
+}
