@@ -30,11 +30,36 @@
 	}],
 	"post-processors": [],
 	"provisioners": [{
-		"type": "powershell",
-		"scripts": [
-			"./scripts/chocolatey.ps1"
-		]
-	}],
+			"type": "powershell",
+			"scripts": [
+				"./scripts/chocolatey.ps1"
+			]
+		},
+		{
+			"type": "powershell",
+			"scripts": [
+				"./scripts/docker/10/install-containers-feature.ps1"
+			]
+		},
+		{
+			"type": "windows-restart"
+		},
+		{
+			"environment_vars": [
+				"docker_images={{user `docker_images`}}",
+				"docker_provider={{user `docker_provider`}}",
+				"docker_version={{user `docker_version`}}"
+			],
+			"scripts": [
+				"./scripts/docker/add-docker-group.ps1",
+				"./scripts/docker/install-docker.ps1",
+				"./scripts/docker/docker-pull.ps1",
+				"./scripts/docker/open-docker-insecure-port.ps1",
+				"./scripts/docker/remove-docker-key-json.ps1"
+			],
+			"type": "powershell"
+		}
+	],
 	"variables": {
 		"client_id": "{{env `ARM_CLIENT_ID`}}",
 		"client_secret": "{{env `ARM_CLIENT_SECRET`}}",
@@ -50,7 +75,7 @@
 		"azure_billto": "0002",
 		"cloud_environment_name": "Public",
 		"custom_data_file": "",
-		"os_disk_size_gb": "4095",
+		"os_disk_size_gb": "100",
 		"os_type": "Windows",
 		"vm_size": "Standard_DS3_v2",
 		"ftp_proxy": "{{env `ftp_proxy`}}",
@@ -58,6 +83,9 @@
 		"https_proxy": "{{env `https_proxy`}}",
 		"no_proxy": "{{env `no_proxy`}}",
 		"rsync_proxy": "{{env `rsync_proxy`}}",
+		"docker_images": "microsoft/windowsservercore microsoft/nanoserver",
+		"docker_provider": "ce",
+		"docker_version": "17.10.0",
 		"vagrantfile_template": "",
 		"version": "0.0.1"
 	}
