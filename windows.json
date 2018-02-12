@@ -17,14 +17,13 @@
 		"communicator": "winrm",
 		"winrm_use_ssl": "true",
 		"winrm_insecure": "true",
-		"winrm_timeout": "15m",
+		"winrm_timeout": "30m",
 		"winrm_username": "packer",
 		"azure_tags": {
 			"billTo": "{{user `azure_billto`}}"
 		},
 		"ssh_username": "packer",
 		"cloud_environment_name": "{{user `cloud_environment_name`}}",
-		"os_disk_size_gb": "{{user `os_disk_size_gb`}}",
 		"os_type": "{{user `os_type`}}",
 		"vm_size": "{{user `vm_size`}}"
 	}],
@@ -75,7 +74,6 @@
 		"azure_billto": "0002",
 		"cloud_environment_name": "Public",
 		"custom_data_file": "",
-		"os_disk_size_gb": "100",
 		"os_type": "Windows",
 		"vm_size": "Standard_DS3_v2",
 		"ftp_proxy": "{{env `ftp_proxy`}}",
