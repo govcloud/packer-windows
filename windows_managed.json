@@ -5,15 +5,13 @@
 		"client_id": "{{user `client_id`}}",
 		"client_secret": "{{user `client_secret`}}",
 		"subscription_id": "{{user `subscription_id`}}",
-		"object_id": "{{user `object_id`}}",
-		"build_resource_group_name": "{{user `build_resource_group_name`}}",
-		"capture_container_name": "{{user `capture_container_name`}}",
+		"object_id": "{{user `object_id`}}",		
+		"managed_image_name": "{{user `managed_image_name`}}", 
 		"virtual_network_name": "{{user `virtual_network_name`}}", 		
 		"virtual_network_subnet_name": "{{user `virtual_network_subnet_name`}}",
-		"virtual_network_resource_group_name": "{{user `virtual_network_resource_group_name`}}",
-		"capture_name_prefix": "{{user `capture_name_prefix`}}",
-		"resource_group_name": "{{user `resource_group_name`}}",
-		"storage_account": "{{user `storage_account`}}",
+		"virtual_network_resource_group_name": "{{user `virtual_network_resource_group_name`}}",		 				
+		"managed_image_resource_group_name": "{{user `managed_image_resource_group_name`}}", 
+		"build_resource_group_name": "{{user `build_resource_group_name`}}", 		
 		"image_publisher": "{{user `image_publisher`}}",
 		"image_offer": "{{user `image_offer`}}",
 		"image_sku": "{{user `image_sku`}}",
@@ -23,9 +21,6 @@
 		"winrm_insecure": "true",
 		"winrm_timeout": "30m",
 		"winrm_username": "packer",
-		"azure_tags": {
-			"billTo": "{{user `azure_billto`}}"
-		},
 		"ssh_username": "packer",
 		"cloud_environment_name": "{{user `cloud_environment_name`}}",
 		"os_type": "{{user `os_type`}}",
@@ -37,26 +32,47 @@
 			"scripts": [
 				"./scripts/chocolatey.ps1"
 			]
-		}			
+		},
+		{
+			"type": "powershell",
+			"scripts": [
+				"./scripts/docker/10/install-containers-feature.ps1"
+			]
+		},
+		{
+			"type": "windows-restart"
+		},
+		{
+			"environment_vars": [
+				"docker_images={{user `docker_images`}}",
+				"docker_provider={{user `docker_provider`}}",
+				"docker_version={{user `docker_version`}}"
+			],
+			"scripts": [
+				"./scripts/docker/add-docker-group.ps1",
+				"./scripts/docker/install-docker.ps1",
+				"./scripts/docker/docker-pull.ps1",
+				"./scripts/docker/open-docker-insecure-port.ps1",
+				"./scripts/docker/remove-docker-key-json.ps1"
+			],
+			"type": "powershell"
+		}
 	],
 	"variables": {
 		"client_id": "{{env `ARM_CLIENT_ID`}}",
 		"client_secret": "{{env `ARM_CLIENT_SECRET`}}",
 		"subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
-		"object_id": "{{env `ARM_OBJECT_ID`}}",
-		"build_resource_group_name": "{{env `ARM_BUILD_RESOURCE_GROUP_NAME`}}",
-		"capture_container_name": "{{env `ARM_VHD_CAPTURE_CONTAINER_NAME`}}",
-		"capture_name_prefix": "{{env `ARM_VHD_CAPTURE_NAME_PREFIX`}}",
-		"resource_group_name":"{{env `ARM_VHD_RESOURCE_GROUP_NAME`}}",
-		"storage_account": "{{env `ARM_VHD_STORAGE_ACCOUNT`}}",
+		"object_id": "{{env `ARM_OBJECT_ID`}}",		
+		"managed_image_name": "{{env `ARM_MANAGED_IMAGE_NAME`}}", 
+		"managed_image_resource_group_name": "{{env `ARM_MANAGED_IMAGE_RESOURCE_GROUP`}}", 
+		"build_resource_group_name": "{{env `ARM_BUILD_RESOURCE_GROUP_NAME`}}", 		
 		"virtual_network_name": "{{env `ARM_VIRTUAL_NETWORK_NAME`}}", 				
 		"virtual_network_subnet_name": "{{env `ARM_VIRTUAL_NETWORK_SUBNET_NAME`}}", 		
-		"virtual_network_resource_group_name": "{{env `ARM_VIRTUAL_NETWORK_RESOURCE_NAME`}}", 
+		"virtual_network_resource_group_name": "{{env `ARM_VIRTUAL_NETWORK_RESOURCE_NAME`}}", 								
 		"image_publisher": "MicrosoftWindowsDesktop",
 		"image_offer": "Windows-10",
 		"image_sku": "RS3-Pro",
-		"image_version": "16299.192.0",
-		"azure_billto": "0001",
+		"image_version": "16299.192.0",		
 		"cloud_environment_name": "Public",
 		"custom_data_file": "",
 		"os_type": "Windows",
