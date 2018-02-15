@@ -37,6 +37,16 @@
 			"scripts": [
 				"./scripts/chocolatey.ps1"
 			]
+		},
+		{
+            "type": "powershell",
+            "script": "scripts/Sysprep.ps1",            
+            "valid_exit_codes": [
+                0
+            ]
+        },	
+		{
+			"type": "windows-restart"
 		}			
 	],
 	"variables": {

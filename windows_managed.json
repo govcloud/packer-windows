@@ -33,29 +33,15 @@
 				"./scripts/chocolatey.ps1"
 			]
 		},
-		{
-			"type": "powershell",
-			"scripts": [
-				"./scripts/docker/10/install-containers-feature.ps1"
-			]
-		},
+			{
+            "type": "powershell",
+            "script": "scripts/Sysprep.ps1",            
+            "valid_exit_codes": [
+                0
+            ]
+        },	
 		{
 			"type": "windows-restart"
-		},
-		{
-			"environment_vars": [
-				"docker_images={{user `docker_images`}}",
-				"docker_provider={{user `docker_provider`}}",
-				"docker_version={{user `docker_version`}}"
-			],
-			"scripts": [
-				"./scripts/docker/add-docker-group.ps1",
-				"./scripts/docker/install-docker.ps1",
-				"./scripts/docker/docker-pull.ps1",
-				"./scripts/docker/open-docker-insecure-port.ps1",
-				"./scripts/docker/remove-docker-key-json.ps1"
-			],
-			"type": "powershell"
 		}
 	],
 	"variables": {
