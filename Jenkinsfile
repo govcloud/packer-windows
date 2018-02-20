@@ -1,10 +1,35 @@
 #!/usr/bin/groovy
 
+// load pipeline functions
+// Requires pipeline-github-lib plugin to load library from github
+
+@Library('github.com/sylus/jenkins-pipeline@dev')
+
+def pipeline = new io.estrado.Pipeline()
 def label = "packer-linux-${UUID.randomUUID().toString()}"
 
 podTemplate(label: label,
   envVars: [
-    envVar(key: 'PACKER_VERSION', value: '1.2.0')
+    envVar(key: 'PACKER_VERSION', value: '1.2.0'),
+    secretEnvVar(key: 'ARM_CLIENT_ID', secretName: 'arm-client-id', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_CLIENT_SECRET', secretName: 'arm-client-secret', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_SUBSCRIPTION_ID', secretName: 'arm-subscription-id', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_OBJECT_ID', secretName: 'arm-object-id', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_BUILD_RESOURCE_GROUP_NAME', secretName: 'arm-build-resource-group-name', secretKey: 'password'),
+
+    secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_NAME', secretName: 'arm-virtual-network-name', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_SUBNET_NAME', secretName: 'arm-virtual-network-subnet-name', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_RESOURCE_NAME', secretName: 'arm-virtual-network-resource-name', secretKey: 'password'),
+
+    // Managed Image
+    // envVar(key: 'ARM_MANAGED_IMAGE_NAME', value: label),
+    // secretEnvVar(key: 'ARM_MANAGED_IMAGE_RESOURCE_GROUP', secretName: 'arm-managed-image-resource-group', secretKey: 'password'),
+
+    // VHD
+    secretEnvVar(key: 'ARM_VHD_CAPTURE_CONTAINER_NAME', secretName: 'arm-capture-container-name', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_VHD_CAPTURE_NAME_PREFIX', secretName: 'arm-capture-name-prefix', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_VHD_RESOURCE_GROUP_NAME', secretName: 'arm-resource-group-name', secretKey: 'password'),
+    secretEnvVar(key: 'ARM_VHD_STORAGE_ACCOUNT', secretName: 'arm-storage-account', secretKey: 'password')
   ],
   containers: [
     containerTemplate(name: 'jnlp',
@@ -24,18 +49,8 @@ podTemplate(label: label,
                       image: 'centos:centos7',
                       command: 'cat',
                       ttyEnabled: true,
-                      envVars: [
-                        secretEnvVar(key: 'ARM_CLIENT_ID', secretName: 'arm-client-id', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_CLIENT_SECRET', secretName: 'arm-client-secret', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_SUBSCRIPTION_ID', secretName: 'arm-subscription-id', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_OBJECT_ID', secretName: 'arm-object-id', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_MANAGED_IMAGE_NAME', secretName: 'arm-managed-image-name', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_MANAGED_IMAGE_RESOURCE_GROUP', secretName: 'arm-managed-image-resource-group', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_BUILD_RESOURCE_GROUP_NAME', secretName: 'arm-build-resource-group-name', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_NAME', secretName: 'arm-virtual-network-name', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_SUBNET_NAME', secretName: 'arm-virtual-network-subnet-name', secretKey: 'password'),
-                        secretEnvVar(key: 'ARM_VIRTUAL_NETWORK_RESOURCE_NAME', secretName: 'arm-virtual-network-resource-name', secretKey: 'password')
-                      ])
+                      privileged: true,
+                      ports: [portMapping(name: 'winrm', containerPort: 5986, hostPort: 5986)])
   ],
   volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
@@ -45,6 +60,11 @@ podTemplate(label: label,
     stage('Run shell') {
 
       git 'https://github.com/govcloud/packer-windows.git'
+
+      def pwd = pwd()
+      def inputFile = readFile('Jenkinsfile.json')
+      def config = new groovy.json.JsonSlurperClassic().parseText(inputFile)
+      println "pipeline config ==> ${config}"
 
       container('centos') {
 
@@ -65,10 +85,10 @@ podTemplate(label: label,
             rm -f packer_${PACKER_VERSION}_linux_amd64.zip'
 
         // Image build
-        sh '/bin/packer build \
+        sh 'PACKER_LOG=1 /bin/packer build \
               -force \
               -var-file=windows10.json \
-              windows_managed.json'
+              windows.json'
       }
     }
 

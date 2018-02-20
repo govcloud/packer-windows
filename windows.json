@@ -8,9 +8,10 @@
 		"object_id": "{{user `object_id`}}",
 		"build_resource_group_name": "{{user `build_resource_group_name`}}",
 		"capture_container_name": "{{user `capture_container_name`}}",
-		"virtual_network_name": "{{user `virtual_network_name`}}", 		
+		"virtual_network_name": "{{user `virtual_network_name`}}",
 		"virtual_network_subnet_name": "{{user `virtual_network_subnet_name`}}",
 		"virtual_network_resource_group_name": "{{user `virtual_network_resource_group_name`}}",
+		"private_virtual_network_with_public_ip": "{{user `private_virtual_network_with_public_ip`}}",
 		"capture_name_prefix": "{{user `capture_name_prefix`}}",
 		"resource_group_name": "{{user `resource_group_name`}}",
 		"storage_account": "{{user `storage_account`}}",
@@ -40,14 +41,14 @@
 		},
 		{
             "type": "powershell",
-            "script": "scripts/Sysprep.ps1",            
+            "script": "scripts/Sysprep.ps1",
             "valid_exit_codes": [
                 0
             ]
-        },	
+        },
 		{
 			"type": "windows-restart"
-		}			
+		}
 	],
 	"variables": {
 		"client_id": "{{env `ARM_CLIENT_ID`}}",
@@ -59,9 +60,10 @@
 		"capture_name_prefix": "{{env `ARM_VHD_CAPTURE_NAME_PREFIX`}}",
 		"resource_group_name":"{{env `ARM_VHD_RESOURCE_GROUP_NAME`}}",
 		"storage_account": "{{env `ARM_VHD_STORAGE_ACCOUNT`}}",
-		"virtual_network_name": "{{env `ARM_VIRTUAL_NETWORK_NAME`}}", 				
-		"virtual_network_subnet_name": "{{env `ARM_VIRTUAL_NETWORK_SUBNET_NAME`}}", 		
-		"virtual_network_resource_group_name": "{{env `ARM_VIRTUAL_NETWORK_RESOURCE_NAME`}}", 
+		"virtual_network_name": "{{env `ARM_VIRTUAL_NETWORK_NAME`}}",
+		"virtual_network_subnet_name": "{{env `ARM_VIRTUAL_NETWORK_SUBNET_NAME`}}",
+		"virtual_network_resource_group_name": "{{env `ARM_VIRTUAL_NETWORK_RESOURCE_NAME`}}",
+		"private_virtual_network_with_public_ip": "true",
 		"image_publisher": "MicrosoftWindowsDesktop",
 		"image_offer": "Windows-10",
 		"image_sku": "RS3-Pro",
