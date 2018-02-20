@@ -1,0 +1,27 @@
+{
+	"app": {
+	  "name": "packer-windows",
+	  "replicas": "3",
+	  "cpu": "500m",
+	  "memory": "1024Mi",
+	  "test": true,
+	  "hostname": "packer-windows.govcloud.ca"
+	},
+	"container_repo": {
+	  "host": "quay.io",
+	  "master_acct": "sylus",
+	  "alt_acct": "sylus",
+	  "jenkins_creds_id": "packer_windows_creds",
+	  "repo": "packer-windows",
+	  "dockeremail": ".",
+	  "dockerfile": "./",
+	  "image_scanning": false
+	},
+	"pipeline": {
+		"enabled": true,
+		"debug": false,
+		"library": {
+		  "branch": "dev"
+		}
+	}
+}
