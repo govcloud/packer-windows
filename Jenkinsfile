@@ -8,7 +8,8 @@
 def pipeline = new io.estrado.Pipeline()
 def label = "packer-linux-${UUID.randomUUID().toString()}"
 
-podTemplate(label: label,
+podTemplate(
+  label: label,
   envVars: [
     envVar(key: 'PACKER_VERSION', value: '1.2.0'),
     secretEnvVar(key: 'ARM_CLIENT_ID', secretName: 'arm-client-id', secretKey: 'password'),
@@ -57,14 +58,29 @@ podTemplate(label: label,
   ]) {
 
   node (label) {
-    stage('Run shell') {
+    stage('Create immutable image') {
 
-      git 'https://github.com/govcloud/packer-windows.git'
+      checkout scm
 
       def pwd = pwd()
       def inputFile = readFile('Jenkinsfile.json')
       def config = new groovy.json.JsonSlurperClassic().parseText(inputFile)
       println "pipeline config ==> ${config}"
+
+      // continue only if pipeline enabled
+      if (!config.pipeline.enabled) {
+          println "pipeline disabled"
+          return
+      }
+
+      // set additional git envvars for image tagging
+      pipeline.gitEnvVars()
+
+      // If pipeline debugging enabled
+      if (config.pipeline.debug) {
+        println "DEBUG ENABLED"
+        sh "env | sort"
+      }
 
       container('centos') {
 
