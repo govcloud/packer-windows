@@ -101,7 +101,7 @@ podTemplate(
             rm -f packer_${PACKER_VERSION}_linux_amd64.zip'
 
         // Image build
-        sh 'PACKER_LOG=1 /bin/packer build \
+        sh '/bin/packer build \
               -force \
               -var-file=windows10.json \
               windows.json'
