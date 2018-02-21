@@ -41,7 +41,7 @@ podTemplate(
                       resourceLimitCpu: '300m',
                       resourceRequestMemory: '256Mi',
                       resourceLimitMemory: '512Mi',
-                      privileged: true),
+                      privileged: false),
     containerTemplate(name: 'docker',
                       image: 'docker:1.12.6',
                       command: 'cat',
@@ -50,7 +50,7 @@ podTemplate(
                       image: 'centos:centos7',
                       command: 'cat',
                       ttyEnabled: true,
-                      privileged: true,
+                      privileged: false,
                       ports: [portMapping(name: 'winrm', containerPort: 5986, hostPort: 5986)])
   ],
   volumes:[
