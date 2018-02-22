@@ -82,6 +82,8 @@ podTemplate(
         sh "env | sort"
       }
 
+      slackSend (color: '#00FF00', message: "STARTED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
       container('centos') {
 
         // Install deps
@@ -106,6 +108,9 @@ podTemplate(
               -var-file=windows10.json \
               windows.json'
       }
+
+      slackSend (color: '#00FF00', message: "FINISHED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
     }
 
   }
