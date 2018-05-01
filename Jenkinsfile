@@ -6,8 +6,12 @@
 @Library('github.com/sylus/jenkins-pipeline@dev')
 
 def pipeline = new io.estrado.Pipeline()
+
+// UUID
 def label = "packer-linux-${UUID.randomUUID().toString()}"
 
+// Pod and Container template configuration
+// https://github.com/jenkinsci/kubernetes-plugin#pod-and-container-template-configuration
 podTemplate(
   label: label,
   envVars: [
@@ -58,29 +62,34 @@ podTemplate(
   ]) {
 
   node (label) {
+
     stage('Create immutable image') {
 
       // Update the gitlab status to pending
       // https://jenkins.io/doc/pipeline/steps/gitlab-plugin
       updateGitlabCommitStatus name: 'build', state: 'pending'
 
+      // Checkout code from source control where scm instructs the checkout step
+      // to clone the specific revision which triggered pipeline.
       checkout scm
 
       // Update the gitlab status to running
       updateGitlabCommitStatus name: 'build', state: 'running'
 
+      // Variable assignment
+      // https://jenkins.io/doc/book/pipeline/jenkinsfile/#string-interpolation
       def pwd = pwd()
       def inputFile = readFile('Jenkinsfile.json')
       def config = new groovy.json.JsonSlurperClassic().parseText(inputFile)
       println "pipeline config ==> ${config}"
 
-      // continue only if pipeline enabled
+      // Continue only if pipeline enabled
       if (!config.pipeline.enabled) {
           println "pipeline disabled"
           return
       }
 
-      // set additional git envvars for image tagging
+      // Set additional git envvars
       pipeline.gitEnvVars()
 
       // If pipeline debugging enabled
@@ -89,6 +98,8 @@ podTemplate(
         sh "env | sort"
       }
 
+      // Send a slack notification
+      // https://jenkins.io/doc/pipeline/steps/slack
       slackSend (color: '#00FF00', message: "STARTED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
 
       container('centos') {
