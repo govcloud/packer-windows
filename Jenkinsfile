@@ -60,7 +60,14 @@ podTemplate(
   node (label) {
     stage('Create immutable image') {
 
+      // Update the gitlab status to pending
+      // https://jenkins.io/doc/pipeline/steps/gitlab-plugin
+      updateGitlabCommitStatus name: 'build', state: 'pending'
+
       checkout scm
+
+      // Update the gitlab status to running
+      updateGitlabCommitStatus name: 'build', state: 'running'
 
       def pwd = pwd()
       def inputFile = readFile('Jenkinsfile.json')
@@ -111,6 +118,8 @@ podTemplate(
 
       slackSend (color: '#00FF00', message: "FINISHED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
 
+      // Update the gitlab status to success
+      updateGitlabCommitStatus name: 'build', state: 'success'
     }
 
   }
