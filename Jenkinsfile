@@ -55,7 +55,11 @@ podTemplate(
                       command: 'cat',
                       ttyEnabled: true,
                       privileged: false,
-                      ports: [portMapping(name: 'winrm', containerPort: 5986, hostPort: 5986)])
+                      ports: [portMapping(name: 'winrm', containerPort: 5986, hostPort: 5986)]),
+    containerTemplate(name: 'azure-cli',
+                      image: 'microsoft/azure-cli:2.0.31',
+                      command: 'cat',
+                      ttyEnabled: true),
   ],
   volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
@@ -98,40 +102,61 @@ podTemplate(
         sh "env | sort"
       }
 
-      // Send a slack notification
-      // https://jenkins.io/doc/pipeline/steps/slack
-      slackSend (color: '#00FF00', message: "STARTED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+      // Allows various kinds of credentials (secrets) to be used in idiosyncratic ways.
+      // https://jenkins.io/doc/pipeline/steps/credentials-binding/
+      withCredentials([
+          azureServicePrincipal(credentialsId: 'sp-jenkins-acr',
+                          subscriptionIdVariable: 'SUBSCRIPTION_ID',
+                          clientIdVariable: 'CLIENT_ID',
+                          clientSecretVariable: 'CLIENT_SECRET',
+                          tenantIdVariable: 'TENANT_ID')
+      ]) {
 
-      container('centos') {
+        def scriptOutput
 
-        // Install deps
-        sh 'yum install -y \
-              unzip \
-              tar \
-              gzip \
-              wget && \
-            yum clean all && rm -rf /var/cache/yum/*'
+        // Send a slack notification
+        // https://jenkins.io/doc/pipeline/steps/slack
+        slackSend (color: '#00FF00', message: "STARTED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
 
-        // Install packer
-        sh 'curl -L -o packer_${PACKER_VERSION}_linux_amd64.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip && \
-            curl -L -o packer_${PACKER_VERSION}_SHA256SUMS https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS && \
-            sed -i "/packer_${PACKER_VERSION}_linux_amd64.zip/!d" packer_${PACKER_VERSION}_SHA256SUMS && \
-            sha256sum -c packer_${PACKER_VERSION}_SHA256SUMS && \
-            unzip packer_${PACKER_VERSION}_linux_amd64.zip -d /bin && \
-            rm -f packer_${PACKER_VERSION}_linux_amd64.zip'
+        // Container for Azure CLI
+        container('azure-cli') {
+          sh 'az login --service-principal -u $CLIENT_ID -p $CLIENT_SECRET -t $TENANT_ID'
+          sh 'az account set -s $SUBSCRIPTION_ID'
+          // Gather latest window image
+          scriptOutput = sh(returnStdout: true, script: 'scripts/version.sh').trim()
+        }
 
-        // Image build
-        sh '/bin/packer build \
-              -force \
-              -var-file=windows10.json \
-              windows.json'
+        // Container for CentOS
+        container('centos') {
+          // Install deps
+          sh 'yum install -y \
+                unzip \
+                tar \
+                gzip \
+                wget && \
+              yum clean all && rm -rf /var/cache/yum/*'
+
+          // Install packer
+          sh 'curl -L -o packer_${PACKER_VERSION}_linux_amd64.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip && \
+              curl -L -o packer_${PACKER_VERSION}_SHA256SUMS https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS && \
+              sed -i "/packer_${PACKER_VERSION}_linux_amd64.zip/!d" packer_${PACKER_VERSION}_SHA256SUMS && \
+              sha256sum -c packer_${PACKER_VERSION}_SHA256SUMS && \
+              unzip packer_${PACKER_VERSION}_linux_amd64.zip -d /bin && \
+              rm -f packer_${PACKER_VERSION}_linux_amd64.zip'
+
+          // Image build
+          sh "/bin/packer build \
+                -var image_version=${scriptOutput} \
+                -force \
+                -var-file=windows10.json \
+                windows.json"
+        }
+
+        slackSend (color: '#00FF00', message: "FINISHED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+
+        // Update the gitlab status to success
+        updateGitlabCommitStatus name: 'build', state: 'success'
       }
-
-      slackSend (color: '#00FF00', message: "FINISHED: Generation of immutable image '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-
-      // Update the gitlab status to success
-      updateGitlabCommitStatus name: 'build', state: 'success'
     }
-
   }
 }
